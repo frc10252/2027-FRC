@@ -105,8 +105,7 @@ public class Telemetry {
         }
 
         /* Keys consumed by the team's Elastic layout */
-        SmartDashboard.putNumber("gyro angle", RobotContainer.imu.getYaw().getValueAsDouble());
-        SmartDashboard.putNumber("target angle", RobotContainer.driveSubsystem.targetAngle);
+        SmartDashboard.putNumber("heading angle", pose.getRotation().getDegrees());
         SmartDashboard.putNumber("match time", Math.max(0.0, DriverStation.getMatchTime()));
         SmartDashboard.putNumber("battery voltage", RobotController.getBatteryVoltage());
         SmartDashboard.putNumber("x velocity", state.Speeds.vxMetersPerSecond);

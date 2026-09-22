@@ -23,4 +23,11 @@ public class Constants {
     /** Controller ports. */
     public static final int driverControllerPort = 0;
     public static final int operatorControllerPort = 1;
+
+    public static final double DRIVER_DEADBAND = 0.05;
+    public static final double MAX_ANGULAR_RATE =
+        RotationsPerSecond.of(0.75).in(RadiansPerSecond);
+
+    public static final double TRANSLATION_ACCELERATION_LIMIT = 3.0;
+    public static final double ROTATION_ACCELERATION_LIMIT = 2.0 * Math.PI;
 }

@@ -6,9 +6,9 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -33,8 +33,6 @@ public class RobotContainer {
 
     public static Drive driveSubsystem;
     // 2027 mechanism subsystems go here.
-
-    public static final Pigeon2 imu = new Pigeon2(Constants.pigeonID);
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
     private final SendableChooser<Command> autoChooser = new SendableChooser<>();
@@ -65,7 +63,9 @@ public class RobotContainer {
         // Driver: A = brake (X-lock), B = point wheels at left-stick direction
         joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
         joystick.b().whileTrue(drivetrain.applyRequest(() ->
-            point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
+            point.withModuleDirection(new Rotation2d(
+                -MathUtil.applyDeadband(joystick.getLeftY(), Constants.DRIVER_DEADBAND),
+                -MathUtil.applyDeadband(joystick.getLeftX(), Constants.DRIVER_DEADBAND)))
         ));
 
         // Driver: X = demo on-the-fly path (1 m forward, turn 90 deg), Y = zero odometry
@@ -75,10 +75,7 @@ public class RobotContainer {
             () -> driveSubsystem.resetPose(new Pose2d()), driveSubsystem));
 
         // Driver: left bumper = reset field-centric heading
-        joystick.leftBumper().onTrue(
-            drivetrain.runOnce(() -> drivetrain.seedFieldCentric())
-                .andThen(new InstantCommand(() -> driveSubsystem.resetTargetAngle(0)))
-        );
+        joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
