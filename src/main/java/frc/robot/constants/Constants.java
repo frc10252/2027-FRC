@@ -23,4 +23,10 @@ public class Constants {
     /** Controller ports. */
     public static final int driverControllerPort = 0;
     public static final int operatorControllerPort = 1;
+
+    /** Outtake. TODO: set motor IDs to match the robot's CAN IDs. */
+    public static final int outtakeMotor1ID = 20;
+    public static final int outtakeMotor2ID = 21;
+    public static final double outtakeMaxPower = 0.85;
+    public static final double outtakeJoystickDeadband = 0.1;
 }

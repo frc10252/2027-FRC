@@ -24,6 +24,7 @@ import frc.robot.constants.Constants;
 import frc.robot.constants.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Drive;
+import frc.robot.subsystems.Outtake;
 
 public class RobotContainer {
     public double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
@@ -32,7 +33,7 @@ public class RobotContainer {
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
     public static Drive driveSubsystem;
-    // 2027 mechanism subsystems go here.
+    public static Outtake outtake;
 
     public static final Pigeon2 imu = new Pigeon2(Constants.pigeonID);
 
@@ -46,6 +47,7 @@ public class RobotContainer {
 
     public RobotContainer() {
         driveSubsystem = new Drive(drivetrain, joystick);
+        outtake = new Outtake(joystick);
         configureBindings();
         configureAutoChooser();
     }
