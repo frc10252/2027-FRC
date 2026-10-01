@@ -30,7 +30,9 @@ public class Drive extends SubsystemBase {
     private final SwerveRequest.FieldCentric drive =
         new SwerveRequest.FieldCentric()
             .withDriveRequestType(DriveRequestType.Velocity);
-    private final SwerveRequest.ApplyRobotSpeeds autoDrive = new SwerveRequest.ApplyRobotSpeeds();
+    private final SwerveRequest.ApplyRobotSpeeds autoDrive =
+        new SwerveRequest.ApplyRobotSpeeds()
+            .withDriveRequestType(DriveRequestType.Velocity);
     private final SlewRateLimiter forwardLimiter =
         new SlewRateLimiter(Constants.TRANSLATION_ACCELERATION_LIMIT);
     private final SlewRateLimiter strafeLimiter =
@@ -58,8 +60,8 @@ public class Drive extends SubsystemBase {
                 this::getRobotRelativeSpeeds,
                 (speeds, feedforwards) -> driveRobotRelative(speeds),
                 new PPHolonomicDriveController(
-                        new PIDConstants(7.0, 0.0001, 0.01),
-                        new PIDConstants(5.0, 0.0001, 0.045)
+                        new PIDConstants(3.0, 0.000001, 0.0001),
+                        new PIDConstants(3.0, 0.000001, 0.0001)
                 ),
                 config,
                 () -> DriverStation.getAlliance().isPresent()

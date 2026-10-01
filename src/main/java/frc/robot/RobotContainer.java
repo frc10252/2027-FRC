@@ -68,9 +68,11 @@ public class RobotContainer {
                 -MathUtil.applyDeadband(joystick.getLeftX(), Constants.DRIVER_DEADBAND)))
         ));
 
-        // Driver: X = demo on-the-fly path (1 m forward, turn 90 deg), Y = zero odometry
-        joystick.x().onTrue(new InstantCommand(
-            () -> driveSubsystem.pathRelative(1, 0, Math.toRadians(90)).schedule(), driveSubsystem));
+        // Driver: Y = zero odometry
+        // X demo path disabled: PathPlanner settings.json was removed until the MK5n
+        // robot config is entered, and AutoBuilder.followPath() throws when unconfigured.
+        // joystick.x().onTrue(new InstantCommand(
+        //     () -> driveSubsystem.pathRelative(1, 0, Math.toRadians(90)).schedule(), driveSubsystem));
         joystick.y().onTrue(new InstantCommand(
             () -> driveSubsystem.resetPose(new Pose2d()), driveSubsystem));
 
