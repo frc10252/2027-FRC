@@ -109,7 +109,11 @@ public class Drive extends SubsystemBase {
     }
 
     public void resetPose(Pose2d pose) {
-        drivetrain.resetPose(pose);
+        Rotation2d r = new Rotation2d();
+        r = new Rotation2d();
+        r = Rotation2d.fromDegrees(180);
+        drivetrain.resetPose(pose.rotateBy(r));
+        //drivetrain.resetPose(pose.rotateBy(new Rotation2d(180)));
     }
 
     public ChassisSpeeds getRobotRelativeSpeeds() {
