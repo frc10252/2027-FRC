@@ -19,6 +19,7 @@ public class Constants {
 
     public static final int pigeonID = 15;
     public static final Pigeon2 imu = new Pigeon2(Constants.pigeonID);
+    public static final int intakeMotorID = //jhi';
 
     /** Controller ports. */
     public static final int driverControllerPort = 0;
@@ -30,4 +31,9 @@ public class Constants {
 
     public static final double TRANSLATION_ACCELERATION_LIMIT = 3.0;
     public static final double ROTATION_ACCELERATION_LIMIT = 2.0 * Math.PI;
+
+    //Roller
+    public static final int rollerCanId = // ;
+    public static final double rollerLowSpeed = 0.1;
+    public static final double rollerHighSpeed = 0.5;
 }
