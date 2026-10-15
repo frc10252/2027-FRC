@@ -1,0 +1,210 @@
+package frc.robot.subsystems;
+
+import java.util.List;
+
+import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.Waypoint;
+
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.constants.Constants;
+
+public class Drive extends SubsystemBase {
+    private final SwerveRequest.FieldCentric drive =
+        new SwerveRequest.FieldCentric()
+            .withDriveRequestType(DriveRequestType.Velocity);
+    private final SwerveRequest.ApplyRobotSpeeds autoDrive =
+        new SwerveRequest.ApplyRobotSpeeds()
+            .withDriveRequestType(DriveRequestType.Velocity);
+    private final SlewRateLimiter forwardLimiter =
+        new SlewRateLimiter(Constants.TRANSLATION_ACCELERATION_LIMIT);
+    private final SlewRateLimiter strafeLimiter =
+        new SlewRateLimiter(Constants.TRANSLATION_ACCELERATION_LIMIT);
+    private final SlewRateLimiter rotationLimiter =
+        new SlewRateLimiter(Constants.ROTATION_ACCELERATION_LIMIT);
+    CommandSwerveDrivetrain drivetrain;
+    double MaxSpeed = Constants.MaxSpeed;
+    double scaling = Constants.scaling;
+    CommandXboxController joystick;
+    private Command lastPath;
+
+    public Drive(CommandSwerveDrivetrain x, CommandXboxController joystick)
+    {
+        drivetrain = x;
+        this.joystick=joystick;
+
+
+        
+        try {
+            RobotConfig config = RobotConfig.fromGUISettings();
+            AutoBuilder.configure(
+                this::getPose,
+                this::resetPose,
+                this::getRobotRelativeSpeeds,
+                (speeds, feedforwards) -> driveRobotRelative(speeds),
+                new PPHolonomicDriveController(
+                        new PIDConstants(3.0, 0.000001, 0.0001),
+                        new PIDConstants(3.0, 0.000001, 0.0001)
+                ),
+                config,
+                () -> DriverStation.getAlliance().isPresent()
+                        && DriverStation.getAlliance().get() == DriverStation.Alliance.Red,
+                this
+            );
+        } catch (Exception e) {
+            DriverStation.reportError("Failed to load PathPlanner config and configure AutoBuilder", e.getStackTrace());
+        }
+
+        
+    }
+
+    public Command getDefaultCommand() {
+        return drivetrain.applyRequest(() -> {
+            double requestedVelocityX = -MathUtil.applyDeadband(
+                joystick.getLeftY(), Constants.DRIVER_DEADBAND) * MaxSpeed * scaling;
+            double requestedVelocityY = -MathUtil.applyDeadband(
+                joystick.getLeftX(), Constants.DRIVER_DEADBAND) * MaxSpeed * scaling;
+            double requestedRotation = -MathUtil.applyDeadband(
+                joystick.getRightX(), Constants.DRIVER_DEADBAND) * Constants.MAX_ANGULAR_RATE;
+
+            return drive.withVelocityX(forwardLimiter.calculate(requestedVelocityX))
+                .withVelocityY(strafeLimiter.calculate(requestedVelocityY))
+                .withRotationalRate(rotationLimiter.calculate(requestedRotation));
+        }).beforeStarting(this::resetDriveLimiters);
+    }
+
+    private void resetDriveLimiters() {
+        forwardLimiter.reset(0.0);
+        strafeLimiter.reset(0.0);
+        rotationLimiter.reset(0.0);
+    }
+
+    public void useDefaultCommand(){
+        drivetrain.setDefaultCommand(getDefaultCommand());
+    }
+
+    public Pose2d getPose() {
+        return drivetrain.getState().Pose;
+    }
+
+    public void cancelLastPath() {
+        if (lastPath != null) lastPath.cancel();
+    }
+
+    public void resetPose(Pose2d pose) {
+        Rotation2d r = new Rotation2d();
+        r = new Rotation2d();
+        r = Rotation2d.fromDegrees(180);
+        drivetrain.resetPose(pose.rotateBy(r));
+        //drivetrain.resetPose(pose.rotateBy(new Rotation2d(180)));
+    }
+
+    public ChassisSpeeds getRobotRelativeSpeeds() {
+        return drivetrain.getState().Speeds;
+    }
+
+    public void driveRobotRelative(ChassisSpeeds speeds) {
+        drivetrain.setControl(autoDrive.withSpeeds(speeds));
+    }
+
+    public Command driveToPose(Pose2d endPose){
+        Pose2d startPose = getPose();
+        List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(startPose, endPose);
+        Rotation2d endHeading = endPose.getRotation();
+
+        PathPlannerPath path = new PathPlannerPath(
+            waypoints,
+            new PathConstraints(
+                0.5, 
+                0.5,
+                Units.degreesToRadians(0), 
+                Units.degreesToRadians(0)
+            ),
+            null, // Ideal starting state can be null for on-the-fly paths
+            new GoalEndState(0.0, endHeading) // Final heading matches endPos heading
+        );
+
+        path.preventFlipping = true;
+
+        cancelLastPath();
+        lastPath = AutoBuilder.followPath(path);
+        
+        return lastPath;
+    }
+    
+    public Command pathRelative(double targetX, double targetY, double targetRotation) {
+        System.out.println("path relative with target: " + targetX + ", " + targetY + ", " + targetRotation);
+        System.out.println("current pose: " + getPose());
+        
+        Pose2d currentPose = getPose();
+
+        Translation2d localOffset = new Translation2d(targetX, targetY);
+        Translation2d fieldOffset = localOffset.rotateBy(currentPose.getRotation ());
+        
+        // Pose2d startPose = new Pose2d(
+        //     currentPose.getTranslation(),
+        //     currentPose.getRotation()
+        // );
+
+        Pose2d startPose = currentPose;
+
+        Rotation2d endHeading = currentPose.getRotation().plus(new Rotation2d(targetRotation));
+
+        Pose2d endPose = new Pose2d(
+            currentPose.getTranslation().plus(fieldOffset),
+            endHeading
+        );
+        List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(startPose, endPose);
+        // PathPlannerPath path = new PathPlannerPath(
+        //     waypoints,
+        //     new PathConstraints(
+        //         0.5, 
+        //         0.5,
+        //         Units.degreesToRadians(360), 
+        //         Units.degreesToRadians(540)
+        //     ),
+        //     null, // Ideal starting state can be null for on-the-fly paths
+        //     new GoalEndState(0.0, endHeading) // Final heading matches endPos heading
+        // );
+
+        PathPlannerPath path = new PathPlannerPath(
+            waypoints,
+            new PathConstraints(
+                0.5, 
+                0.5,
+                Units.degreesToRadians(360), 
+                Units.degreesToRadians(90)
+            ),
+            null, // Ideal starting state can be null for on-the-fly paths
+            new GoalEndState(0.0, endHeading) // Final heading matches endPos heading
+        );
+
+        path.preventFlipping = true;
+
+        cancelLastPath();
+        lastPath = AutoBuilder.followPath(path);
+        
+        return lastPath;
+
+    } 
+
+
+
+}
