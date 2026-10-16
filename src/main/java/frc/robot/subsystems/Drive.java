@@ -60,8 +60,8 @@ public class Drive extends SubsystemBase {
                 this::getRobotRelativeSpeeds,
                 (speeds, feedforwards) -> driveRobotRelative(speeds),
                 new PPHolonomicDriveController(
-                        new PIDConstants(3.0, 0.000001, 0.0001),
-                        new PIDConstants(3.0, 0.000001, 0.0001)
+                        new PIDConstants(5.0, 0.0, 0.0), // translation (PathPlanner default)
+                        new PIDConstants(5.0, 0.0, 0.0)  // rotation (PathPlanner default)
                 ),
                 config,
                 () -> DriverStation.getAlliance().isPresent()

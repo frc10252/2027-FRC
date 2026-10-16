@@ -61,6 +61,8 @@ public class RobotContainer {
 
         // Operator: Y deploys the intake once using the integrated motor encoders.
         coJoystick.y().onTrue(intake.extendOnceCommand());
+        // Operator: hold right bumper to run the intake roller.
+        coJoystick.rightBumper().whileTrue(intake.runIntakeCommand(Constants.intakeRollerPower));
 
         // Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
@@ -77,23 +79,20 @@ public class RobotContainer {
                 -MathUtil.applyDeadband(joystick.getLeftX(), Constants.DRIVER_DEADBAND)))
         ));
 
-        // Driver: Y = zero odometry
         // X demo path disabled: PathPlanner settings.json was removed until the MK5n
         // robot config is entered, and AutoBuilder.followPath() throws when unconfigured.
         // joystick.x().onTrue(new InstantCommand(
         //     () -> driveSubsystem.pathRelative(1, 0, Math.toRadians(90)).schedule(), driveSubsystem));
-        joystick.y().onTrue(new InstantCommand(
-            () -> driveSubsystem.resetPose(new Pose2d()), driveSubsystem));
 
         // Driver: left bumper = reset field-centric heading
         joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-        // Run SysId routines when holding back/start and X/Y.
-        // Note that each routine should be run exactly once in a single log.
-        joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        // SysId disabled for competition: these combos drive the robot on their own.
+        // Re-enable only for drivetrain characterization on blocks or in open space.
+        // joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+        // joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+        // joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+        // joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }

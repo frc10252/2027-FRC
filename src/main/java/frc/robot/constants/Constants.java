@@ -2,7 +2,6 @@ package frc.robot.constants;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix6.hardware.Pigeon2;
 
 /**
  * Robot-wide constants.
@@ -18,7 +17,6 @@ public class Constants {
     public static final double scaling = 0.3;
 
     public static final int pigeonID = 15;
-    public static final Pigeon2 imu = new Pigeon2(Constants.pigeonID);
     /** Mechanism CAN IDs. */
     public static final int intakeExtensionRightMotorID = 20;
     public static final int intakeExtensionLeftMotorID = 21;
@@ -42,11 +40,12 @@ public class Constants {
         RotationsPerSecond.of(0.75).in(RadiansPerSecond);
 
     public static final double TRANSLATION_ACCELERATION_LIMIT = 3.0;
-    public static final double ROTATION_ACCELERATION_LIMIT = 2.0 * Math.PI;
+    /** rad/s^2. 6*pi reverses full rotation (+/-0.75 rps) in about 0.5 s. */
+    public static final double ROTATION_ACCELERATION_LIMIT = 6.0 * Math.PI;
 
-    // Roller (CAN ID still needs to be assigned; 26 is now the outside shooter.)
-    public static final double rollerLowSpeed = 0.1;
-    public static final double rollerHighSpeed = 0.5;
+    /** Intake roller duty cycle while the operator holds the intake button. */
+    public static final double intakeRollerPower = 0.5;
+
     /** Ignores tiny velocity readings when deciding whether the shooter is moving. */
     public static final double shooterRunningThresholdRps = 1.0;
 

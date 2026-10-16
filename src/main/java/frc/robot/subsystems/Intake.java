@@ -41,7 +41,7 @@ public class Intake extends SubsystemBase {
     /**
      * Extend the intake one time using the TalonFX integrated encoders.
      *
-     * <p>The two motors turn in opposite directions. Each side stops independently
+     * <p>Positive output on both motors moves the intake out. Each side stops independently
      * when it reaches the target, and the command times out if either side stalls.
      */
     public Command extendOnceCommand() {
@@ -75,7 +75,7 @@ public class Intake extends SubsystemBase {
         }
 
         if (Math.abs(getLeftExtensionRotations()) < target - tolerance) {
-            leftExtensionMotor.set(-Constants.intakeExtensionPower);
+            leftExtensionMotor.set(Constants.intakeExtensionPower);
         } else {
             leftExtensionMotor.stopMotor();
         }

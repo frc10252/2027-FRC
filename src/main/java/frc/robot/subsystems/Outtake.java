@@ -27,12 +27,17 @@ public class Outtake extends SubsystemBase {
         feederMotor = new SparkMax(Constants.shooterFeederMotorID, MotorType.kBrushless);
     }
 
-    /** Manual shooter control for use as this subsystem's default command. */
+    /**
+     * Manual shooter control for use as this subsystem's default command.
+     * Pushing the right stick up shoots: inside motor positive, outside motor negative.
+     * Pulling down does nothing, so the shooter never runs backward.
+     */
     public Command manualShooterCommand() {
         return runEnd(
             () -> {
-                double input = joystick.getRightY();
-                if (Math.abs(input) < Constants.shooterJoystickDeadband) {
+                // Xbox stick Y is negative when pushed up.
+                double input = Math.max(0.0, -joystick.getRightY());
+                if (input < Constants.shooterJoystickDeadband) {
                     input = 0.0;
                 }
 
